@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.util.Log;
 
+import com.elderdrivers.riru.edxp.bridge.BuildConfig;
 import com.elderdrivers.riru.edxp.config.EdXpConfigGlobal;
 
 import java.lang.reflect.AccessibleObject;
@@ -21,6 +22,8 @@ import java.util.Set;
 
 import dalvik.system.InMemoryDexClassLoader;
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
+import de.robv.android.xposed.annotation.ApiSensitive;
+import de.robv.android.xposed.annotation.Level;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_InitZygote;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -92,6 +95,7 @@ public final class XposedBridge {
 
 	public static volatile ClassLoader dummyClassLoader = null;
 
+	@ApiSensitive(Level.MIDDLE)
 	public static void initXResources() {
         if (dummyClassLoader != null) {
         	return;
@@ -142,12 +146,11 @@ public final class XposedBridge {
 	 * Returns the currently installed version of the Xposed framework.
 	 */
 	public static int getXposedVersion() {
-		// ed: fixed value for now
-		return 90;
+		return BuildConfig.API_CODE;
 	}
 
 	/**
-	 * Writes a message to the Xposed error log.
+	 * Writes a message to the Xposed modules log.
 	 *
 	 * <p class="warning"><b>DON'T FLOOD THE LOG!!!</b> This is only meant for error logging.
 	 * If you want to write information/debug messages, use logcat.
@@ -155,11 +158,14 @@ public final class XposedBridge {
 	 * @param text The log message.
 	 */
 	public synchronized static void log(String text) {
+		if (EdXpConfigGlobal.getConfig().isNoModuleLogEnabled()) {
+			return;
+		}
 		Log.i(TAG, text);
 	}
 
 	/**
-	 * Logs a stack trace to the Xposed error log.
+	 * Logs a stack trace to the Xposed modules log.
 	 *
 	 * <p class="warning"><b>DON'T FLOOD THE LOG!!!</b> This is only meant for error logging.
 	 * If you want to write information/debug messages, use logcat.
@@ -234,7 +240,7 @@ public final class XposedBridge {
             if (reflectMethod != null) {
 				hookMethodNative(reflectMethod, declaringClass, slot, additionalInfo);
 			} else {
-				PendingHooks.recordPendingMethod(hookMethod, additionalInfo);
+				PendingHooks.recordPendingMethod((Method)hookMethod, additionalInfo);
 			}
         }
 

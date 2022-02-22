@@ -40,7 +40,12 @@ public abstract class BaseHookProvider implements HookProvider {
     }
 
     @Override
-    public void setNativeFlag(Member hookMethod, boolean isNative) {
-        Yahfa.setNativeFlag(hookMethod, isNative);
+    public boolean methodHooked(Member target) {
+        return Yahfa.isHooked(target);
+    }
+
+    @Override
+    public Object invokeOriginalMethod(Member method, long methodId, Object thisObject, Object[] args) throws Throwable {
+        return null;
     }
 }

@@ -1,22 +1,27 @@
 package com.elderdrivers.riru.edxp.config;
 
-import com.elderdrivers.riru.edxp.hooker.XposedBlackListHooker;
+import android.text.TextUtils;
 
 public class BaseEdxpConfig implements EdxpConfig {
 
     @Override
-    public String getInstallerBaseDir() {
-        return InstallerChooser.INSTALLER_DATA_BASE_DIR;
+    public String getConfigPath(String suffix) {
+        return ConfigManager.getConfigPath(suffix != null ? suffix : "");
     }
 
     @Override
-    public String getBlackListModulePackageName() {
-        return XposedBlackListHooker.BLACK_LIST_PACKAGE_NAME;
+    public String getDataPathPrefix() {
+        return ConfigManager.getDataPathPrefix();
     }
 
     @Override
-    public boolean isDynamicModulesMode() {
-        return ConfigManager.isDynamicModulesEnabled();
+    public String getInstallerPackageName() {
+        return ConfigManager.getInstallerPackageName();
+    }
+
+    @Override
+    public String getLibSandHookName() {
+        return ConfigManager.getLibSandHookName();
     }
 
     @Override
@@ -25,7 +30,20 @@ public class BaseEdxpConfig implements EdxpConfig {
     }
 
     @Override
+    public boolean isSELinuxEnforced() {
+        return ConfigManager.isSELinuxEnforced();
+    }
+
+    @Override
+    public boolean isNoModuleLogEnabled() {
+        return ConfigManager.isNoModuleLogEnabled();
+    }
+
+    @Override
     public boolean isBlackWhiteListMode() {
         return ConfigManager.isBlackWhiteListEnabled();
     }
+
+    @Override
+    public String getModulesList() { return ConfigManager.getModulesList(); }
 }

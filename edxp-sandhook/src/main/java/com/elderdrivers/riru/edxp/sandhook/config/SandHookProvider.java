@@ -6,19 +6,22 @@ import com.elderdrivers.riru.edxp.art.ClassLinker;
 import com.elderdrivers.riru.edxp.config.BaseHookProvider;
 import com.elderdrivers.riru.edxp.core.ResourcesHook;
 import com.elderdrivers.riru.edxp.core.Yahfa;
-import com.elderdrivers.riru.edxp.sandhook.dexmaker.DynamicBridge;
 import com.swift.sandhook.xposedcompat.XposedCompat;
 import com.swift.sandhook.xposedcompat.methodgen.SandHookXposedBridge;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XposedBridge;
+
+import static com.elderdrivers.riru.edxp.util.ClassUtils.shouldDelayHook;
 
 public class SandHookProvider extends BaseHookProvider {
     @Override
     public void hookMethod(Member method, XposedBridge.AdditionalHookInfo additionalInfo) {
-        if (SandHookXposedBridge.hooked(method) || DynamicBridge.hooked(method)) {
+        if (methodHooked(method)) {
             return;
         }
         if (method.getDeclaringClass() == Log.class) {
@@ -36,14 +39,20 @@ public class SandHookProvider extends BaseHookProvider {
             } catch (Throwable throwable) {
                 throw new InvocationTargetException(throwable);
             }
+        } else if (super.methodHooked(method)){
+            return super.invokeOriginalMethod(method, methodId, thisObject, args);
         } else {
-            return DynamicBridge.invokeOriginalMethod(method, thisObject, args);
+            if (method instanceof Constructor) {
+                return ((Constructor) method).newInstance(args);
+            } else {
+                return ((Method) method).invoke(thisObject, args);
+            }
         }
     }
 
     @Override
     public Member findMethodNative(Member hookMethod) {
-        return hookMethod;
+        return shouldDelayHook(hookMethod) ? null : hookMethod;
     }
 
     @Override
@@ -69,5 +78,10 @@ public class SandHookProvider extends BaseHookProvider {
     @Override
     public boolean removeFinalFlagNative(Class clazz) {
         return ResourcesHook.removeFinalFlagNative(clazz);
+    }
+
+    @Override
+    public boolean methodHooked(Member target) {
+        return SandHookXposedBridge.hooked(target) || super.methodHooked(target);
     }
 }
